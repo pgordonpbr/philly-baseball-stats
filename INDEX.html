@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Philly Baseball Weekly - Live Stats</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #fff;
+      color: #000;
+    }
+    h2 {
+      color: #e32227;
+      border-bottom: 2px solid #e32227;
+      padding-bottom: 5px;
+      margin-top: 40px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    th {
+      background-color: #e32227;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h2>⚾ Phillies Batting Stats (Min 1 AB)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>AB</th>
+        <th>R</th>
+        <th>H</th>
+        <th>2B</th>
+        <th>3B</th>
+        <th>HR</th>
+        <th>RBI</th>
+        <th>BB</th>
+        <th>K</th>
+        <th>SB</th>
+        <th>AVG</th>
+        <th>OPS</th>
+      </tr>
+    </thead>
+    <tbody id="batting-leaders"></tbody>
+  </table>
+
+  <h2>🔥 Phillies Pitching Stats (Min 1 IP)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>IP</th>
+        <th>W</th>
+        <th>L</th>
+        <th>ERA</th>
+        <th>SO</th>
+        <th>BB</th>
+        <th>WHIP</th>
+      </tr>
+    </thead>
+    <tbody id="pitching-leaders"></tbody>
+  </table>
+
+  <script>
+    async function loadBatting() {
+      const res = await fetch("https://statsapi.mlb.com/api/v1/teams/143/stats?stats=season&group=hitting");
+      const players = (await res.json()).stats[0].splits;
+      const filtered = players.filter(p => parseInt(p.stat.atBats) >= 1);
+      filtered.sort((a, b) => parseFloat(b.stat.avg) - parseFloat(a.stat.avg));
+
+      const tbody = document.getElementById("batting-leaders");
+      for (const p of filtered) {
+        const s = p.stat;
+        tbody.innerHTML += `<tr>
+          <td><strong>${p.player.fullName}</strong></td>
+          <td>${s.atBats}</td>
+          <td>${s.runs}</td>
+          <td>${s.hits}</td>
+          <td>${s.doubles}</td>
+          <td>${s.triples}</td>
+          <td>${s.homeRuns}</td>
+          <td>${s.rbi}</td>
+          <td>${s.baseOnBalls}</td>
+          <td>${s.strikeOuts}</td>
+          <td>${s.stolenBases}</td>
+          <td>${parseFloat(s.avg).toFixed(3)}</td>
+          <td>${parseFloat(s.ops).toFixed(3)}</td>
+        </tr>`;
+      }
+    }
+
+    async function loadPitching() {
+      const res = await fetch("https://statsapi.mlb.com/api/v1/teams/143/stats?stats=season&group=pitching");
+      const players = (await res.json()).stats[0].splits;
+      const filtered = players.filter(p => parseFloat(p.stat.inningsPitched) >= 1);
+      filtered.sort((a, b) => parseFloat(a.stat.era) - parseFloat(b.stat.era));
+
+      const tbody = document.getElementById("pitching-leaders");
+      for (const p of filtered) {
+        const s = p.stat;
+        tbody.innerHTML += `<tr>
+          <td><strong>${p.player.fullName}</strong></td>
+          <td>${s.inningsPitched}</td>
+          <td>${s.wins}</td>
+          <td>${s.losses}</td>
+          <td>${parseFloat(s.era).toFixed(2)}</td>
+          <td>${s.strikeOuts}</td>
+          <td>${s.baseOnBalls}</td>
+          <td>${parseFloat(s.whip).toFixed(2)}</td>
+        </tr>`;
+      }
+    }
+
+    loadBatting();
+    loadPitching();
+  </script>
+</body>
+</html>
